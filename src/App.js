@@ -12,11 +12,14 @@ import '@suiet/wallet-kit/style.css'; // Ensure Suiet styles are included
 import { Transaction } from '@mysten/sui/transactions';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Secp256k1Keypair } from '@mysten/sui/keypairs/secp256k1';
+import { Secp256r1Keypair } from '@mysten/sui/keypairs/secp256r1';
 import { fromHex } from '@mysten/bcs';
 
 const App = () => {
   const [ethAddress, setEthAddress] = useState(null);
   const [amount, setAmount] = useState('');
+  const [coinObjectId, setCoinObjectId] = useState('');
   const [suiPrivateKey, setSuiPrivateKey] = useState('');
   const [status, setStatus] = useState('');
   const [suiAddress, setSuiAddress] = useState(null);
@@ -37,43 +40,85 @@ const App = () => {
       console.error('Error connecting to MetaMask:', error);
     }
   };
-
-  const handleTransaction = async (amount, suiPrivateKey) => {
-    if (!wallet.connected) {
-      setStatus('Please connect to Suiet Wallet');
-      return;
-    }
-
+  const mergeCoin = async (suiPrivateKey) => {
     try {
-      const recipientAddress = '0x790c9af276e8d2067883d16428f41f26062a0cee250bbe0b46cb82951ef231de';  // Replace with the recipient's address
-      const keypair = Ed25519Keypair.fromSecretKey(fromHex(suiPrivateKey));
-      console.log({ keypair });
+      const keypair = Ed25519Keypair.fromSecretKey(suiPrivateKey)
       const client = new SuiClient({
-          url: getFullnodeUrl('devnet'),
+        url: getFullnodeUrl('devnet'),
       });
       const coins = await client.getCoins({
-          owner: wallet.account.address,
-          coinType:"0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901::ITBToken::ITBTOKEN"
+        owner: wallet.account.address,
+        coinType:"0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901::ITBToken::ITBTOKEN"
       })
       let coinsArray = []
       for (const coin of coins.data) {
-          coinsArray.push(coin.coinObjectId)
+        coinsArray.push(coin.coinObjectId)
+      }
+      if (coinsArray.length === 0) {
+        console.log('No coins found');
+        return;
+      }
+
+      if (coinsArray.length === 1) {
+        console.log('One coin, not need merge');
+        return;
       }
       const lastCoin = coinsArray[coinsArray.length - 1];
       coinsArray.pop();
 
+
       const tx = new Transaction();
       tx.mergeCoins(lastCoin, coinsArray);
       const result = await client.signAndExecuteTransaction({
-          signer: keypair,
-          transaction: tx,
+        signer: keypair,
+        transaction: tx,
       });
       console.log({ result });
+
 
     } catch (error) {
       console.error("Error sending transaction:", error);
       setStatus('Transaction failed');
     }
+  }
+  const transferCoin = async (amount, recipientAddress, suiPrivateKey) => {
+    if (!wallet.connected) {
+      setStatus('Please connect to Suiet Wallet');
+      return;
+    }
+    try {
+      const keypair = Ed25519Keypair.fromSecretKey(suiPrivateKey);
+      const client = new SuiClient({
+        url: getFullnodeUrl('devnet'),
+      });
+      const coins = await client.getCoins({
+        owner: wallet.account.address,
+        coinType:"0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901::ITBToken::ITBTOKEN"
+      })
+
+      const tx = new Transaction();
+      const coin = tx.splitCoins(coins.data[0].coinObjectId, [amount]);
+      tx.transferObjects([coin], recipientAddress);
+        const result = await client.signAndExecuteTransaction({
+            signer: keypair,
+            transaction: tx,
+        });
+        console.log({ result });
+    } catch (error) {
+        console.error('Error getting coins:', error);
+    }
+  }
+  const handleTransaction = async (amount, suiPrivateKey) => {
+    if (!wallet.connected) {
+      setStatus('Please connect to Suiet Wallet');
+      return;
+    }
+    const recipientAddress = '0x790c9af276e8d2067883d16428f41f26062a0cee250bbe0b46cb82951ef231de';  // Replace with the recipient's address
+    mergeCoin(suiPrivateKey);
+    const decimals = 9;
+    const amountDecimal = amount * 10 ** decimals
+    transferCoin(amountDecimal, recipientAddress, suiPrivateKey);
+
   };
 
   const handleEth_to_Sui = async (amount) => {

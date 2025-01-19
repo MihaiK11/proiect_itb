@@ -33,27 +33,12 @@ const mintSUI = async (recipient, amount) => {
     });
 };
 
-const splitCoin = async (fromAdress, amount) => {
-    const decimals = 9;
-    const splitAmount = (amount * 10 ** decimals).toString()
-    let coin_object_id = "0x6e29a32fcba349053493d371a35e7e9abd11b7ae86545af3975ffc1805a1c646";
-    const command = `${suiPath} client split-coin ${coin_object_id} ${splitAmount}`;
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error executing command: ${stderr}`);
-        }
-        return stdout;
-        console.log(`Command executed successfully: ${stdout}`);
-    });
-}
-app.post('/Sui_to_Eth', async (req, res) => {
-    const { recipientAddress, fromAddress, amount } = req.body;
+app.post('/burnSui', async (req, res) => {
+    const {amount } = req.body;
 
     const decimals = 9;
-    const burnAmount = (amount * 10 ** decimals).toString()
+    const burnAmount = (amount * 10 ** decimals).toString();
 
-    let coin = splitCoin(fromAddress, burnAmount);
-    return coin;
 });
 const deployedContractAddressEth = "0x7865ce0ef00739d7A241ef152247eB161D8B653B";
 const privateKeyEth = "8b34a90d54e6a60d89c469dbd4c2aa0e0a62f0a5796fb7eb96c51e6d1713d696";
