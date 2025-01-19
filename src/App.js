@@ -81,6 +81,7 @@ const App = () => {
       setStatus('Transaction failed');
     }
   }
+
   const transferCoin = async (amount, recipientAddress, suiPrivateKey) => {
     if (!wallet.connected) {
       setStatus('Please connect to Suiet Wallet');
@@ -108,16 +109,65 @@ const App = () => {
         console.error('Error getting coins:', error);
     }
   }
+
+  const burnCoin = async (amount, adminAddress) => {
+    try {
+      const client = new SuiClient({
+        url: getFullnodeUrl('devnet'),
+      });
+      const coins = await client.getCoins({
+        owner: adminAddress,
+        coinType:"0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901::ITBToken::ITBTOKEN"
+      })
+
+      let coin_to_burn;
+      for (const coin of coins.data) {
+        const txn = await client.getObject({
+          id: coin.coinObjectId,
+          // fetch the object content field
+          options: { showContent: true },
+        });
+        if (txn.data.content.fields['balance'] == amount) {
+          coin_to_burn = txn.data.content.fields['id'].id;
+          break;
+        }
+      }
+      console.log(coin_to_burn)
+      const backendUrl = 'http://localhost:5000/burnSui';
+      const response = await fetch(backendUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          coin_id: coin_to_burn,
+          amount: amount,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert(`Successfully burned ${amount} IBT`);
+      } else {
+        alert('Error burning tokens: ' + data.message);
+      }
+
+    } catch (error) {
+      console.error("Error sending transaction:", error);
+      setStatus('Transaction failed');
+    }
+  }
+
   const handleTransaction = async (amount, suiPrivateKey) => {
     if (!wallet.connected) {
       setStatus('Please connect to Suiet Wallet');
       return;
     }
-    const recipientAddress = '0x790c9af276e8d2067883d16428f41f26062a0cee250bbe0b46cb82951ef231de';  // Replace with the recipient's address
+    const recipientAddress = '0x65cf341ef4886d78efbd78b7b1eec6b14087e12c49ccb65654133b6745dfcf7c';  // Replace with the recipient's address
     mergeCoin(suiPrivateKey);
     const decimals = 9;
     const amountDecimal = amount * 10 ** decimals
     transferCoin(amountDecimal, recipientAddress, suiPrivateKey);
+    burnCoin(amountDecimal,recipientAddress);
 
   };
 

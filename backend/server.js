@@ -34,11 +34,17 @@ const mintSUI = async (recipient, amount) => {
 };
 
 app.post('/burnSui', async (req, res) => {
-    const {amount } = req.body;
+    const {coin_id, amount} = req.body;
 
-    const decimals = 9;
-    const burnAmount = (amount * 10 ** decimals).toString();
+    const command = `${suiPath} client call --package ${packageId} --module ITBToken --function burn --args ${treasuryCap} ${coin_id} ${adminCap}`;
 
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing command: ${stderr}`);
+        }
+
+        console.log(`Command executed successfully: ${stdout}`);
+    });
 });
 const deployedContractAddressEth = "0x7865ce0ef00739d7A241ef152247eB161D8B653B";
 const privateKeyEth = "8b34a90d54e6a60d89c469dbd4c2aa0e0a62f0a5796fb7eb96c51e6d1713d696";
