@@ -44,22 +44,25 @@ const EthTokenPage = () => {
 
     const mintEthToken = async (recipient, amount) => {
         try {
-            if (!window.ethereum) {
-                alert('MetaMask is not installed. Please install it to use this feature!');
-                return;
+            const backendUrl = 'http://localhost:5000/mintETH'; // Backend API URL
+
+            const response = await fetch(backendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    recipientAddress: recipient,
+                    amount: amount,
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert(`Successfully minted ${amount} IBT to ${recipient}`);
+            } else {
+                alert('Error minting tokens: ' + data.message);
             }
-
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const tokenContract = new ethers.Contract(tokenAddress, tokenABI, signer);
-
-            const decimals = 18;
-            const mintAmount = ethers.parseUnits(amount.toString(), decimals);
-
-            const tx = await tokenContract.mint(recipient, mintAmount);
-            await tx.wait();
-
-            alert(`Successfully minted ${amount} IBT to ${recipient}`);
         } catch (error) {
             console.error('Error minting tokens:', error);
         }
@@ -67,67 +70,70 @@ const EthTokenPage = () => {
 
     const burnEthToken = async (amount) => {
         try {
-            if (!window.ethereum) {
-                alert('MetaMask is not installed. Please install it to use this feature!');
-                return;
+            const backendUrl = 'http://localhost:5000/burnETH'; // Backend API URL
+            const fromAddress = account;
+
+            const response = await fetch(backendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    fromAddress: fromAddress,
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert(`Successfully burned ${amount} IBT from ${account}`);
+            } else {
+                alert('Error burning tokens: ' + data.message);
             }
-
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const tokenContract = new ethers.Contract(tokenAddress, tokenABI, signer);
-
-            const decimals = 18;
-            const burnAmount = ethers.parseUnits(amount.toString(), decimals);
-
-            const tx = await tokenContract.burn(account, burnAmount);
-            await tx.wait();
-
-            alert(`Successfully burned ${amount} IBT from ${account}`);
         } catch (error) {
             console.error('Error burning tokens:', error);
         }
     };
 
     return (
+        <div>
+            <h1>IBT Token Management</h1>
             <div>
-                <h1>IBT Token Management</h1>
-                {/* MetaMask Connection */}
-                <div>
-                    <h2>MetaMask Connection</h2>
-                    <button onClick={connectMetaMask}>Connect MetaMask</button>
-                    {account && (
-                        <div>
-                            <p>Connected Account: {account}</p>
-                            <p>ETH Balance: {ethBalance} ETH</p>
-                            <p>IBT Token Balance: {ibtBalance} IBT</p>
+                <h2>MetaMask Connection</h2>
+                <button onClick={connectMetaMask}>Connect MetaMask</button>
+                {account && (
+                    <div>
+                        <p>Connected Account: {account}</p>
+                        <p>ETH Balance: {ethBalance} ETH</p>
+                        <p>IBT Token Balance: {ibtBalance} IBT</p>
 
-                            <h2>Mint IBT Tokens</h2>
-                            <input type="text" id="recipient" placeholder="Recipient Address" />
-                            <input type="number" id="mintAmount" placeholder="Amount" />
-                            <button
-                                onClick={() => {
-                                    const recipient = document.getElementById('recipient').value;
-                                    const amount = parseFloat(document.getElementById('mintAmount').value);
-                                    mintEthToken(recipient, amount);
-                                }}
-                            >
-                                Mint Tokens
-                            </button>
+                        <h2>Mint IBT Tokens</h2>
+                        <input type="text" id="recipient" placeholder="Recipient Address" />
+                        <input type="number" id="mintAmount" placeholder="Amount" />
+                        <button
+                            onClick={() => {
+                                const recipient = document.getElementById('recipient').value;
+                                const amount = parseFloat(document.getElementById('mintAmount').value);
+                                mintEthToken(recipient, amount);
+                            }}
+                        >
+                            Mint Tokens
+                        </button>
 
-                            <h2>Burn IBT Tokens</h2>
-                            <input type="number" id="burnAmount" placeholder="Amount" />
-                            <button
-                                onClick={() => {
-                                    const amount = parseFloat(document.getElementById('burnAmount').value);
-                                    burnEthToken(amount);
-                                }}
-                            >
-                                Burn Tokens
-                            </button>
-                        </div>
-                    )}
-                </div>
+                        <h2>Burn IBT Tokens</h2>
+                        <input type="number" id="burnAmount" placeholder="Amount" />
+                        <button
+                            onClick={() => {
+                                const amount = parseFloat(document.getElementById('burnAmount').value);
+                                burnEthToken(amount);
+                            }}
+                        >
+                            Burn Tokens
+                        </button>
+                    </div>
+                )}
             </div>
+        </div>
     );
 };
 
