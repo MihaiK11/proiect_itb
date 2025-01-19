@@ -13,13 +13,11 @@ app.use(cors()); // This allows all origins (e.g., http://localhost:3000) to mak
 
 // Path to the sui.exe executable
 const suiPath = "C:\\Users\\mikek\\UVT\\sui\\sui.exe";  // Replace with your actual path
-
+const packageId = "0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901";
+const treasuryCap = "0x09a8ba4c97b295644bb7bb7483ee84c3e55fb158ff9551253282697c2f742a00"; // Replace with actual object ID
+const adminCap = "0x419706cfbe541eee5c728a86fc2a574b83b126838a68ed802ee32cf2142424f0"; // Replace with actual admin cap object ID
 // Endpoint to handle minting request
 const mintSUI = async (recipient, amount) => {
-    const packageId = "0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901";
-    const treasuryCap = "0x09a8ba4c97b295644bb7bb7483ee84c3e55fb158ff9551253282697c2f742a00"; // Replace with actual object ID
-    const adminCap = "0x419706cfbe541eee5c728a86fc2a574b83b126838a68ed802ee32cf2142424f0"; // Replace with actual admin cap object ID
-
     const decimals = 9;
     const mintAmount = (amount * 10 ** decimals).toString()
     // Build the Sui CLI command with the full path to sui.exe
@@ -34,6 +32,29 @@ const mintSUI = async (recipient, amount) => {
         console.log(`Command executed successfully: ${stdout}`);
     });
 };
+
+const splitCoin = async (fromAdress, amount) => {
+    const decimals = 9;
+    const splitAmount = (amount * 10 ** decimals).toString()
+    let coin_object_id = "0x6e29a32fcba349053493d371a35e7e9abd11b7ae86545af3975ffc1805a1c646";
+    const command = `${suiPath} client split-coin ${coin_object_id} ${splitAmount}`;
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing command: ${stderr}`);
+        }
+        return stdout;
+        console.log(`Command executed successfully: ${stdout}`);
+    });
+}
+app.post('/Sui_to_Eth', async (req, res) => {
+    const { recipientAddress, fromAddress, amount } = req.body;
+
+    const decimals = 9;
+    const burnAmount = (amount * 10 ** decimals).toString()
+
+    let coin = splitCoin(fromAddress, burnAmount);
+    return coin;
+});
 const deployedContractAddressEth = "0x7865ce0ef00739d7A241ef152247eB161D8B653B";
 const privateKeyEth = "8b34a90d54e6a60d89c469dbd4c2aa0e0a62f0a5796fb7eb96c51e6d1713d696";
 const rpcUrlEth = "https://eth-sepolia.g.alchemy.com/v2/MD0O5D9yaXGif4cUAP046835sl7fBItR";

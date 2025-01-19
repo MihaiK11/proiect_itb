@@ -9,11 +9,10 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "description": "",
   "dependencies": {
-    "big-integer": "^1.6.52",
-    "bignumber.js": "^9.1.2",
     "cors": "^2.8.5",
+    "ethers": "^6.13.5",
     "express": "^4.21.2"
-  },
-  "description": ""
+  }
 }
