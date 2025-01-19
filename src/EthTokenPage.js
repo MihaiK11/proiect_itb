@@ -104,32 +104,7 @@ const EthTokenPage = () => {
                 {account && (
                     <div>
                         <p>Connected Account: {account}</p>
-                        <p>ETH Balance: {ethBalance} ETH</p>
                         <p>IBT Token Balance: {ibtBalance} IBT</p>
-
-                        <h2>Mint IBT Tokens</h2>
-                        <input type="text" id="recipient" placeholder="Recipient Address" />
-                        <input type="number" id="mintAmount" placeholder="Amount" />
-                        <button
-                            onClick={() => {
-                                const recipient = document.getElementById('recipient').value;
-                                const amount = parseFloat(document.getElementById('mintAmount').value);
-                                mintEthToken(recipient, amount);
-                            }}
-                        >
-                            Mint Tokens
-                        </button>
-
-                        <h2>Burn IBT Tokens</h2>
-                        <input type="number" id="burnAmount" placeholder="Amount" />
-                        <button
-                            onClick={() => {
-                                const amount = parseFloat(document.getElementById('burnAmount').value);
-                                burnEthToken(amount);
-                            }}
-                        >
-                            Burn Tokens
-                        </button>
                     </div>
                 )}
             </div>
