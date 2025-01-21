@@ -13,9 +13,9 @@ app.use(cors()); // This allows all origins (e.g., http://localhost:3000) to mak
 
 // Path to the sui.exe executable
 const suiPath = "C:\\Users\\mikek\\UVT\\sui\\sui.exe";  // Replace with your actual path
-const packageId = "0x48413f341295b75b0f46b0ed253530972eef0ea7516f4a6fdb22a777f3b08901";
-const treasuryCap = "0x09a8ba4c97b295644bb7bb7483ee84c3e55fb158ff9551253282697c2f742a00"; // Replace with actual object ID
-const adminCap = "0x419706cfbe541eee5c728a86fc2a574b83b126838a68ed802ee32cf2142424f0"; // Replace with actual admin cap object ID
+const packageId = "0xfb218dc3bc933a9f9b5fdd65eec5af14d1a67e5d7785859c59c6c8ecee5811c1";
+const treasuryCap = "0x9009e5395095c4241c29ebd5d08ee473fcb4a7ce58bd3fa0b68d7e8bfd0ed3a1"; // Replace with actual object ID
+const adminCap = "0x7406e489f11efc601a9dcdad8de267a31d9a97da0ad1ad27545e8665653e5f38"; // Replace with actual admin cap object ID
 // Endpoint to handle minting request
 const mintSUI = async (recipient, amount) => {
     const decimals = 9;
@@ -29,13 +29,10 @@ const mintSUI = async (recipient, amount) => {
             console.error(`Error executing command: ${stderr}`);
         }
 
-        console.log(`Command executed successfully: ${stdout}`);
+        console.log(`Successfully minted SUI token amount: ${amount} to recipient: ${recipient}`);
     });
 };
-
-app.post('/burnSui', async (req, res) => {
-    const {coin_id, amount} = req.body;
-
+const burnSui = async (coin_id) => {
     const command = `${suiPath} client call --package ${packageId} --module ITBToken --function burn --args ${treasuryCap} ${coin_id} ${adminCap}`;
 
     exec(command, (error, stdout, stderr) => {
@@ -43,8 +40,17 @@ app.post('/burnSui', async (req, res) => {
             console.error(`Error executing command: ${stderr}`);
         }
 
-        console.log(`Command executed successfully: ${stdout}`);
+        console.log(`Successfully burned SUI token with id: ${coin_id}`);
     });
+}
+app.post('/Sui_to_Eth', async (req, res) => {
+    const {coin_id, recipientAddress, amount} = req.body;
+
+    // Burn SUI tokens
+    await burnSui(coin_id);
+
+    // Mint ETH
+    await mintETH(recipientAddress, amount);
 });
 const deployedContractAddressEth = "0x7865ce0ef00739d7A241ef152247eB161D8B653B";
 const privateKeyEth = "8b34a90d54e6a60d89c469dbd4c2aa0e0a62f0a5796fb7eb96c51e6d1713d696";
@@ -95,6 +101,7 @@ const burnETH = async (fromAddress, amount) =>{
         const tx = await tokenContract.burn(fromAddress, burnAmount);
         await tx.wait();
 
+        console.log(`Successfully burned ${amount} tokens from ${fromAddress}`);
     } catch (error) {
         console.error('Error burning tokens:', error);
     }

@@ -27,3 +27,6 @@ yarn-error.log*
 
 # keys
 secretkey.txt
+
+# env
+.env
