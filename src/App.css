@@ -155,3 +155,16 @@ div[type="button"] span, div[type="button"] button{
   background: linear-gradient(145deg, #6b46e8, #4e34c9);
   box-shadow: 0 4px 10px rgba(107, 70, 232, 0.5);
 }
+
+/* Override autofill background color */
+input:-webkit-autofill {
+  background-color: #1b1c39 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #1b1c39 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+input:-webkit-autofill:focus {
+  background-color: #1b1c39 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #1b1c39 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
